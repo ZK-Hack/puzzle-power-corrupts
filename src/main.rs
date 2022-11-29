@@ -1,21 +1,21 @@
 pub mod attack;
-pub mod verify;
 pub mod utils;
+pub mod verify;
 
+use ark_bls12_cheon::{Fq, Fq2, Fr, G1Projective as G1, G2Projective as G2, Parameters};
 use ark_ec::bls12;
-use  ark_bls12_cheon::{
-     G1Projective as G1, G2Projective as G2, Fr as Fr, Fq, Fq2,
-     Parameters
-};
 use ark_ff::MontFp;
 
-use crate::{attack::attack, verify::verify};
+use prompt::{puzzle, welcome};
 
+use crate::{attack::attack, verify::verify};
 
 pub type G2Affine = bls12::G2Affine<crate::Parameters>;
 pub type G1Affine = bls12::G1Affine<crate::Parameters>;
 
 fn main() {
+    welcome();
+    puzzle(PUZZLE_DESCRIPTION);
 
     // P is the generator for G1
     let P_x: Fq = MontFp!("4366845981406663127346140105392043296067620632748305894915559567990751463871846461571751242076416842353760718219463");
@@ -49,8 +49,36 @@ fn main() {
     let tau_d2_Q_c1_y: Fq = MontFp!("200313434320582884299950030908390796161004965251373896142196467499133624968316891420231529223691679020778320981956");
     let tau_d2_Q_y: Fq2 = Fq2::new(tau_d2_Q_c0_y, tau_d2_Q_c1_y);
     let tau_d2_Q = G2::from(G2Affine::new_unchecked(tau_d2_Q_x, tau_d2_Q_y));
-    
+
     let tau = attack(P, tau_P, tau_d1_P, Q, tau_d2_Q);
 
-    assert_eq!(true, verify(P, tau_P, tau));   
+    assert_eq!(true, verify(P, tau_P, tau));
 }
+
+const PUZZLE_DESCRIPTION: &str = r"
+Bob has invented a new pairing-friendly elliptic curve, which he wanted to use with Groth16.
+For that purpose, Bob has performed a trusted setup, which resulted in an SRS containting
+a secret $\tau$ raised to high powers multiplied by a specific generator in both source groups. 
+The exact parameters of the curve and part of the output of the setup are described in the 
+document linked below.
+
+Alice wants to recover $\tau$ and she noticed a few interesting details about the curve and
+the setup. Specifically, she noticed that the sum $d$ of the highest power $d_1$ of $\tau$ in 
+$\mathbb{G}_1$ portion of the SRS, meaning the SRS contains an element of the form 
+$\tau^{d_1} G_1$ where $G_1$ is a generator of $\mathbb{G}_1$, and the highest power $d_2$ 
+of $\tau$ in $\mathbb{G}_2$  divides $q-1$, where $q$ is the order of the groups. 
+
+Additionally, she managed to perform a social engineering attack on Bob and extract the 
+following information: if you express $\tau$ as $\tau = 2^{k_0 + k_1((q-1/d))} \mod r$, 
+where $r$ is the order of the scalar field, $k_0$ is 51 bits and its fifteen most 
+significant bits are 10111101110 (15854 in decimal). That is A < k0 < B where 
+A = 1089478584172543 and B = 1089547303649280.
+
+Alice then remembered the Cheon attack...
+
+NOTE: for exponentiating $F_r$ elements, use the `pow_sp` and `pow_sp2` functions in
+`utils.rs`.
+
+The parameters of the curve and the setup are available at 
+https://gist.github.com/kobigurk/352036cee6cb8e44ddf0e231ee9c3f9b
+";

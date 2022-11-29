@@ -221,6 +221,7 @@ dependencies = [
  "ark-ff 0.4.0-alpha.3",
  "ark-std 0.3.0",
  "num-traits",
+ "prompt",
  "rand",
 ]
 
@@ -386,6 +387,11 @@ checksum = "5ea3d908b0e36316caf9e9e2c4625cdde190a7e6f440d794667ed17a1855e725"
 dependencies = [
  "unicode-ident",
 ]
+
+[[package]]
+name = "prompt"
+version = "0.1.0"
+source = "git+https://github.com/kobigurk/zkhack-prompt#e7a1afa053034caa485184f3f53044463680b0e2"
 
 [[package]]
 name = "quote"
